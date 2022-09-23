@@ -75,8 +75,13 @@ class NeuralNetwork(object):
         '''
 
         # YOU IMPLMENT YOUR actFun HERE
+        if(type=='Relu'):
+            return z if z>0 else 0;
+        elif((type=='Tanh')):
+            return np.tanh(z);
+        elif((type=='Sigmoid')):
+            return 1/(1 + np.exp(-z));
 
-        return None
 
     def diff_actFun(self, z, type):
         '''
@@ -195,9 +200,9 @@ class NeuralNetwork(object):
         plot_decision_boundary(lambda x: self.predict(x), X, y)
 
 def main():
-    # # generate and visualize Make-Moons dataset
-    # X, y = generate_data()
-    # plt.scatter(X[:, 0], X[:, 1], s=40, c=y, cmap=plt.cm.Spectral)
+    # generate and visualize Make-Moons dataset
+    X, y = generate_data()
+    plt.scatter(X[:, 0], X[:, 1], s=40, c=y, cmap=plt.cm.Spectral)
     # plt.show()
 
     # model = NeuralNetwork(nn_input_dim=2, nn_hidden_dim=3 , nn_output_dim=2, actFun_type='tanh')
