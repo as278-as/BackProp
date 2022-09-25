@@ -1,4 +1,6 @@
 __author__ = 'tan_nguyen'
+from ctypes import sizeof
+from turtle import clear
 import numpy as np
 from sklearn import datasets, linear_model
 import matplotlib.pyplot as plt
@@ -44,7 +46,7 @@ class NeuralNetwork(object):
     """
     This class builds and trains a neural network
     """
-    def __init__(self, nn_input_dim, nn_hidden_dim , nn_output_dim, actFun_type='tanh', reg_lambda=0.01, seed=0):
+    def __init__(self, nn_input_dim, nn_hidden_dim , nn_output_dim, actFun_type='Tanh', reg_lambda=0.01, seed=0):
         '''
         :param nn_input_dim: input dimension
         :param nn_hidden_dim: the number of hidden units
@@ -73,14 +75,16 @@ class NeuralNetwork(object):
         :param type: Tanh, Sigmoid, or ReLU
         :return: activations
         '''
-
         # YOU IMPLMENT YOUR actFun HERE
         if(type=='Relu'):
-            return z if z>0 else 0;
+            z[z<=0]=0;
+            return z;
         elif((type=='Tanh')):
-            return np.tanh(z);
+            z=np.tanh(z);
+            return z;
         elif((type=='Sigmoid')):
-            return 1/(1 + np.exp(-z));
+            z=1/(1 + np.exp(-z));
+            return z;
 
 
     def diff_actFun(self, z, type):
@@ -92,8 +96,20 @@ class NeuralNetwork(object):
         '''
 
         # YOU IMPLEMENT YOUR diff_actFun HERE
-
-        return None
+        if(type=='Relu'):
+            z[z>0]=1;
+            z[z<=0]=0;
+            # z=np.sum(z,axis=1,keepdims=True);
+            return z;
+        elif((type=='Tanh')):
+            z= 1-np.tanh(z)**2;
+            # z=np.sum(z,axis=1,keepdims=True);
+            return z;
+        elif((type=='Sigmoid')):
+            z= 1/(1 + np.exp(-z))*(1-1/(1 + np.exp(-z)));
+            # z=np.sum(z,axis=1,keepdims=True);
+            return z;
+        # return None
 
     def feedforward(self, X, actFun):
         '''
@@ -105,12 +121,15 @@ class NeuralNetwork(object):
         '''
 
         # YOU IMPLEMENT YOUR feedforward HERE
-
-        # self.z1 =
-        # self.a1 =
-        # self.z2 =
-        exp_scores = np.exp(self.z2)
-        self.probs = exp_scores / np.sum(exp_scores, axis=1, keepdims=True)
+        self.z1 =self.W1.T@X.T+self.b1.T;
+        self.a1 =actFun(self.z1);
+        self.z2 =self.W2.T@self.a1+self.b2.T;
+        # print(self.z2);
+        self.z2[self.z2>=100]=0;
+        exp_scores = np.exp(self.z2);
+        self.probs = exp_scores / np.sum(exp_scores, axis=0, keepdims=True);
+        self.probs=self.probs.T;
+        # print(self.probs)
         return None
 
     def calculate_loss(self, X, y):
@@ -125,8 +144,9 @@ class NeuralNetwork(object):
         # Calculating the loss
 
         # YOU IMPLEMENT YOUR CALCULATION OF THE LOSS HERE
-
-        # data_loss =
+        b = np.zeros((y.size, y.max() + 1));
+        b[np.arange(y.size), y] = 1
+        data_loss = -1*np.sum(b*np.log10(self.probs));
 
         # Add regulatization term to loss (optional)
         data_loss += self.reg_lambda / 2 * (np.sum(np.square(self.W1)) + np.sum(np.square(self.W2)))
@@ -151,15 +171,22 @@ class NeuralNetwork(object):
 
         # IMPLEMENT YOUR BACKPROP HERE
         num_examples = len(X)
-        delta3 = self.probs
+        delta3 = self.probs;
         delta3[range(num_examples), y] -= 1
-        # dW2 = dL/dW2
-        # db2 = dL/db2
-        # dW1 = dL/dW1
-        # db1 = dL/db1
+        # delta3[range(num_examples), y-1] =0
+        # delta3=delta3.T;
+        delta2= (self.W2@delta3.T)*(self.diff_actFun(self.z1,'Tanh'));
+        dW2 = self.a1@delta3;
+        db2 = np.sum(delta3,axis=0,keepdims=True);
+        dW1 = X.T@delta2.T;
+        # print(dW1.shape);
+        db1 = np.sum(delta2.T,axis=0,keepdims=True);
+        # print(delta2.shape)
+        # print(db1.shape)
         return dW1, dW2, db1, db2
+        # return 0,0,0,0;
 
-    def fit_model(self, X, y, epsilon=0.01, num_passes=20000, print_loss=True):
+    def fit_model(self, X, y, epsilon=0.03, num_passes=100000, print_loss=True):
         '''
         fit_model uses backpropagation to train the network
         :param X: input data
@@ -201,13 +228,21 @@ class NeuralNetwork(object):
 
 def main():
     # generate and visualize Make-Moons dataset
-    X, y = generate_data()
+    X, y = generate_data();
     plt.scatter(X[:, 0], X[:, 1], s=40, c=y, cmap=plt.cm.Spectral)
     # plt.show()
+    # print(y[:4]);
+    # num_examples = len(X)
+    # delta3 = np.array([1,1,1]);
+    # print(delta3.T@delta3);
+    # delta3=delta3/np.sum(delta3, axis=1, keepdims=True);
+    # print(delta3)
+    # print(np.tanh(delta3));
+    # delta3[0, y] -= 1
 
-    # model = NeuralNetwork(nn_input_dim=2, nn_hidden_dim=3 , nn_output_dim=2, actFun_type='tanh')
-    # model.fit_model(X,y)
-    # model.visualize_decision_boundary(X,y)
+    model = NeuralNetwork(nn_input_dim=2, nn_hidden_dim=10 , nn_output_dim=2, actFun_type='Tanh')
+    model.fit_model(X,y)
+    model.visualize_decision_boundary(X,y)
 
 if __name__ == "__main__":
     main()
