@@ -125,7 +125,7 @@ class NeuralNetwork(object):
         self.a1 =actFun(self.z1);
         self.z2 =self.W2.T@self.a1+self.b2.T;
         # print(self.z2);
-        self.z2[self.z2>=100]=0;
+        # self.z2[self.z2>=100]=0;
         exp_scores = np.exp(self.z2);
         self.probs = exp_scores / np.sum(exp_scores, axis=0, keepdims=True);
         self.probs=self.probs.T;
@@ -175,7 +175,7 @@ class NeuralNetwork(object):
         delta3[range(num_examples), y] -= 1
         # delta3[range(num_examples), y-1] =0
         # delta3=delta3.T;
-        delta2= (self.W2@delta3.T)*(self.diff_actFun(self.z1,'Tanh'));
+        delta2= (self.W2@delta3.T)*(self.diff_actFun(self.z1,self.actFun_type));
         dW2 = self.a1@delta3;
         db2 = np.sum(delta3,axis=0,keepdims=True);
         dW1 = X.T@delta2.T;
@@ -186,7 +186,7 @@ class NeuralNetwork(object):
         return dW1, dW2, db1, db2
         # return 0,0,0,0;
 
-    def fit_model(self, X, y, epsilon=0.03, num_passes=100000, print_loss=True):
+    def fit_model(self, X, y, epsilon=0.0001, num_passes=100000, print_loss=True):
         '''
         fit_model uses backpropagation to train the network
         :param X: input data
@@ -240,7 +240,7 @@ def main():
     # print(np.tanh(delta3));
     # delta3[0, y] -= 1
 
-    model = NeuralNetwork(nn_input_dim=2, nn_hidden_dim=10 , nn_output_dim=2, actFun_type='Tanh')
+    model = NeuralNetwork(nn_input_dim=2, nn_hidden_dim=10 , nn_output_dim=2, actFun_type='Relu')
     model.fit_model(X,y)
     model.visualize_decision_boundary(X,y)
 

@@ -73,7 +73,7 @@ class n_layer_neural_network(NeuralNetwork,Layer):
             Z,layer_mem=self.single_layer_feedForward(A_prev,self.W["W"+str(i)],self.B["B"+str(i)]);
             self.mem.append(layer_mem);
             if i==len(self.layers_dim)-1:
-                A[A>=100]=0;
+                # A[A>=100]=0;
                 A=np.exp(Z);
                 A = A / np.sum(A, axis=0, keepdims=True);
             else :
@@ -113,7 +113,7 @@ class n_layer_neural_network(NeuralNetwork,Layer):
 
 
 
-    def fit_model(self, X, y, epsilon=0.005, num_passes=50000, print_loss=True):
+    def fit_model(self, X, y, epsilon=0.0001, num_passes=100000, print_loss=True):
         # Gradient descent.
         for j in range(0, num_passes):
             # Forward propagation
@@ -134,10 +134,10 @@ class n_layer_neural_network(NeuralNetwork,Layer):
             # Optionally print the loss.
             # This is expensive because it uses the whole dataset, so we don't want to do it too often.
             if print_loss and j % 1000 == 0:
-                print("Loss after iteration %i: %f" % (j, self.calculate_loss2(X, y)))
+                print("Loss after iteration %i: %f" % (j, self.calculate_loss(X, y)))
 
 
-    def calculate_loss2(self, X, y):
+    def calculate_loss(self, X, y):
             '''
             calculate_loss computes the loss for prediction
             :param X: input data
@@ -161,7 +161,7 @@ def main():
     # generate and visualize Make-Moons dataset
     X, y = generate_data();
     plt.scatter(X[:, 0], X[:, 1], s=40, c=y, cmap=plt.cm.Spectral)
-    model=n_layer_neural_network([2,3,5,4,2],actFun_type='Tanh');
+    model=n_layer_neural_network([2,6,8,6,2],actFun_type='Relu');
     model.fit_model(X,y)
     model.visualize_decision_boundary(X,y);
 
